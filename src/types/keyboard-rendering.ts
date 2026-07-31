@@ -32,6 +32,7 @@ export type KeyboardCanvasContentProps<T> = {
   showMatrix?: boolean;
   selectedKey?: number;
   keyColors?: number[][];
+  keyColorOverrides?: (KeyColorPair | undefined)[];
   onKeycapPointerDown?: (e: T, idx: number) => void;
   onKeycapPointerOver?: (e: T, idx: number) => void;
   width: number;
@@ -54,6 +55,7 @@ export type KeyGroupProps<T> = {
   mode: DisplayMode;
   pressedKeys?: TestKeyState[];
   keyColors?: number[][];
+  keyColorOverrides?: (KeyColorPair | undefined)[];
   selectedKey?: number;
   onKeycapPointerDown?: (e: T, idx: number) => void;
   onKeycapPointerOver?: (e: T, idx: number) => void;

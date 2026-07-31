@@ -13,13 +13,14 @@ const Switch = styled.label`
   width: 60px;
   height: 34px;
 `;
-const Slider = styled.span<{$ischecked?: boolean}>`
+const Slider = styled.span<{$ischecked?: boolean; $disabled?: boolean}>`
   position: absolute;
-  cursor: pointer;
+  cursor: ${(props) => (props.$disabled ? 'not-allowed' : 'pointer')};
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  opacity: ${(props) => (props.$disabled ? 0.55 : 1)};
   background-color: ${(props) =>
     props.$ischecked ? 'var(--color_accent)' : 'var(--bg_control)'};
   -webkit-transition: 0.4s;
@@ -44,10 +45,12 @@ const Slider = styled.span<{$ischecked?: boolean}>`
 type Props = {
   isChecked: boolean;
   onChange: (val: boolean) => void;
+  disabled?: boolean;
+  ariaLabel?: string;
 };
 
 export function AccentSlider(props: Props) {
-  const {isChecked, onChange} = props;
+  const {isChecked, onChange, disabled = false, ariaLabel} = props;
 
   const [isHiddenChecked, setIsHiddenChecked] = React.useState(isChecked);
   const ref = useRef<HTMLInputElement>(null);
@@ -73,8 +76,10 @@ export function AccentSlider(props: Props) {
         type="checkbox"
         checked={isHiddenChecked}
         onChange={hiddenOnChange}
+        disabled={disabled}
+        aria-label={ariaLabel}
       />
-      <Slider $ischecked={isHiddenChecked} />
+      <Slider $ischecked={isHiddenChecked} $disabled={disabled} />
     </Switch>
   );
 }

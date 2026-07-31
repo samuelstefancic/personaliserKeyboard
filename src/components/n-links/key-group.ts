@@ -131,7 +131,8 @@ export function getKeysKeys<T>(
         k.h * (1 + normalizedKeyYSpacing) - normalizedKeyYSpacing;
       const meshKey = getMeshName(k, rowMap[getKeyId(k)], false);
       const paletteKey = props.keyColors ? i : k.color;
-      const color = (keyColorPalette as any)[paletteKey];
+      const color =
+        props.keyColorOverrides?.[i] || (keyColorPalette as any)[paletteKey];
 
       return {
         position: getPosition(x + minX, y + minY),

@@ -69,9 +69,16 @@ export const KeyGroup: React.FC<KeyGroupProps<React.MouseEvent>> = (props) => {
     keyColorPalette,
     props.onKeycapPointerDown,
     props.onKeycapPointerOver,
+    props.keyColorOverrides,
   ]);
   const labels = useMemo(() => {
-    return getLabels(props, macroExpressions, basicKeyToByte, byteToKey, keycodeLUT);
+    return getLabels(
+      props,
+      macroExpressions,
+      basicKeyToByte,
+      byteToKey,
+      keycodeLUT,
+    );
   }, [keys, props.matrixKeycodes, macros, props.definition, keycodeLUT]);
   const {width, height} = calculateKeyboardFrameDimensions(keys);
   const elems = useMemo(() => {
@@ -98,6 +105,7 @@ export const KeyGroup: React.FC<KeyGroupProps<React.MouseEvent>> = (props) => {
     props.pressedKeys,
     props.selectable,
     keyColorPalette,
+    props.keyColorOverrides,
     props.definition.vendorProductId,
     skipFontCheck,
   ]);

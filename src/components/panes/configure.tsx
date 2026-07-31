@@ -7,7 +7,6 @@ import {CenterPane, ConfigureBasePane} from './pane';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
   CustomFeaturesV2,
-  getLightingDefinition,
   isVIADefinitionV2,
   isVIADefinitionV3,
   VIADefinitionV2,
@@ -82,6 +81,7 @@ const getRowsForKeyboard = (): typeof Rows => {
         Keycode,
         Layouts,
         Macros,
+        Lighting,
         SaveLoad,
       ]),
       ...v3Menus,
@@ -126,11 +126,8 @@ const getRowsForKeyboardV2 = (
 ): typeof Rows => {
   let rows: typeof Rows = [Keycode, Layouts, Macros, SaveLoad];
   if (isVIADefinitionV2(selectedDefinition)) {
-    const {lighting, customFeatures} = selectedDefinition;
-    const {supportedLightingValues} = getLightingDefinition(lighting);
-    if (supportedLightingValues.length !== 0) {
-      rows = [...rows, Lighting];
-    }
+    const {customFeatures} = selectedDefinition;
+    rows = [...rows, Lighting];
     if (customFeatures) {
       rows = [...rows, ...getCustomPanes(customFeatures)];
     }
