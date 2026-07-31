@@ -1,10 +1,21 @@
-# [VIA Web Application](https://usevia.app) - Your keyboards best friend
+# personaliserKeyboard
+
+An experimental keyboard-personalization project built as a focused fork of
+the [VIA Web Application](https://usevia.app).
 
 ![android-chrome-192x192](https://user-images.githubusercontent.com/1714072/222621960-ddfb8ee6-a486-4c66-8852-b204ba7c807b.png)
 
 [![Azure Static Web Apps CI/CD](https://github.com/the-via/app/actions/workflows/azure.yml/badge.svg)](https://github.com/the-via/app/actions/workflows/azure.yml)
 
 VIA is a powerful, open-source web-based interface for configuring your [QMK](https://qmk.fm)-powered mechanical keyboard. It allows you to customize your keymaps, create macros, and adjust RGB settings (if it has RGB) on the fly, without needing to recompile your keyboard's firmware. This makes keyboard customization easier and more accessible for everyone.
+
+## Experimental Lighting Lab
+
+`personaliserKeyboard` adds a host-driven Lighting Lab. Its first effect,
+Concurrent Reactive Ripple, keeps every physical key press on an independent
+timeline so later presses never restart earlier waves. See
+[`docs/lighting-lab.md`](docs/lighting-lab.md) for architecture, safety limits,
+and the EVO75 test checklist.
 
 ## Getting VIA to support your keyboard
 
