@@ -2,7 +2,7 @@ import React, {FC, useContext} from 'react';
 import fullKeyboardDefinition from '../../utils/test-keyboard-definition.json';
 import {Pane} from './pane';
 import styled from 'styled-components';
-import {PROTOCOL_GAMMA} from '../../utils/keyboard-api';
+import {PROTOCOL_GAMMA} from '../../utils/via-protocol';
 import {
   ControlRow,
   Label,
