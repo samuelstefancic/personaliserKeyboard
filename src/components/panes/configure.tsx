@@ -7,7 +7,6 @@ import {CenterPane, ConfigureBasePane} from './pane';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
   CustomFeaturesV2,
-  getLightingDefinition,
   isVIADefinitionV2,
   isVIADefinitionV3,
   VIADefinitionV2,
@@ -34,7 +33,7 @@ import {
   setConfigureKeyboardIsSelectable,
 } from 'src/store/keymapSlice';
 import {useDispatch} from 'react-redux';
-import {reloadConnectedDevices} from 'src/store/devicesThunks';
+import {authorizeAndReloadConnectedDevices} from 'src/store/devicesThunks';
 import {getV3MenuComponents} from 'src/store/menusSlice';
 import {getIsMacroFeatureSupported} from 'src/store/macrosSlice';
 import {getConnectedDevices, getSupportedIds} from 'src/store/devicesSlice';
@@ -82,6 +81,7 @@ const getRowsForKeyboard = (): typeof Rows => {
         Keycode,
         Layouts,
         Macros,
+        Lighting,
         SaveLoad,
       ]),
       ...v3Menus,
@@ -126,11 +126,8 @@ const getRowsForKeyboardV2 = (
 ): typeof Rows => {
   let rows: typeof Rows = [Keycode, Layouts, Macros, SaveLoad];
   if (isVIADefinitionV2(selectedDefinition)) {
-    const {lighting, customFeatures} = selectedDefinition;
-    const {supportedLightingValues} = getLightingDefinition(lighting);
-    if (supportedLightingValues.length !== 0) {
-      rows = [...rows, Lighting];
-    }
+    const {customFeatures} = selectedDefinition;
+    rows = [...rows, Lighting];
     if (customFeatures) {
       rows = [...rows, ...getCustomPanes(customFeatures)];
     }
@@ -171,7 +168,9 @@ const Loader: React.FC<{
     <LoaderPane>
       {<ChippyLoader theme={theme} progress={loadProgress || null} />}
       {(showButton || noConnectedDevices) && !noSupportedIds && !isElectron ? (
-        <AccentButtonLarge onClick={() => dispatch(reloadConnectedDevices())}>
+        <AccentButtonLarge
+          onClick={() => dispatch(authorizeAndReloadConnectedDevices())}
+        >
           {t('Authorize device')}
           <FontAwesomeIcon style={{marginLeft: '10px'}} icon={faPlus} />
         </AccentButtonLarge>

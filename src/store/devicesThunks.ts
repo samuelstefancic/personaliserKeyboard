@@ -22,12 +22,14 @@ import {updateV3MenuData} from './menusSlice';
 import {
   clearAllDevices,
   getConnectedDevices,
+  getDefinitionsReady,
   getForceAuthorize,
   getSelectedDevicePath,
   getSupportedIds,
   selectDevice,
   markDeviceReady,
   setForceAuthorize,
+  setDefinitionsReady,
   updateConnectedDevices,
   updateInvalidProtocolDevices,
   updateUnresolvedDefinitionDevices,
@@ -48,6 +50,7 @@ import {isAuthorizedDeviceConnected} from 'src/utils/type-predicates';
 import {loadFirmwareVersion, loadKeycodesVersion} from './firmwareSlice';
 import {loadDefinitionName} from './definitionNameSlice';
 import {KeycodesVersionProtocolError} from 'src/utils/keycodes-version';
+import {canRequestDeviceAuthorization} from 'src/utils/device-authorization';
 
 const selectConnectedDeviceRetry = createRetry(8, 100);
 
@@ -132,8 +135,14 @@ const selectConnectedDevice =
 export const reloadConnectedDevices =
   (): AppThunk => async (dispatch, getState) => {
     const state = getState();
+    if (!getDefinitionsReady(state)) {
+      return;
+    }
     const selectedDevicePath = getSelectedDevicePath(state);
     const forceRequest = getForceAuthorize(state);
+    if (forceRequest) {
+      dispatch(setForceAuthorize(false));
+    }
 
     // TODO: should we store in local storage for when offline?
     // Might be worth looking at whole store to work out which bits to store locally
@@ -257,15 +266,27 @@ export const reloadConnectedDevices =
       dispatch(selectConnectedDevice(firstConnectedDevice));
     } else if (validDevicesArr.length === 0) {
       dispatch(selectDevice(null));
-      dispatch(setForceAuthorize(true));
     }
   };
 
+export const authorizeAndReloadConnectedDevices =
+  (): AppThunk => async (dispatch, getState) => {
+    if (!canRequestDeviceAuthorization(getDefinitionsReady(getState()))) {
+      // Never defer a native chooser until an unrelated automatic reload.
+      dispatch(setForceAuthorize(false));
+      return;
+    }
+    dispatch(setForceAuthorize(true));
+    await dispatch(reloadConnectedDevices());
+  };
+
 export const loadSupportedIds = (): AppThunk => async (dispatch) => {
+  dispatch(setDefinitionsReady(false));
   await syncStore();
   dispatch(updateSupportedIds(getSupportedIdsFromStore()));
   // John you drongo, don't trust the compiler, dispatches are totes awaitable for async thunks
   await dispatch(updateDefinitions(getDefinitionsFromStore()));
-  dispatch(loadStoredCustomDefinitions());
-  dispatch(reloadConnectedDevices());
+  await dispatch(loadStoredCustomDefinitions());
+  dispatch(setDefinitionsReady(true));
+  await dispatch(reloadConnectedDevices());
 };

@@ -15,7 +15,14 @@ import type {
   Settings,
   VendorProductIdMap,
 } from '../types/types';
+import {
+  mergeBundledDefinitions,
+  mergeBundledSupportedIds,
+  resolveDefinitionWithBundledFallback,
+} from './bundled-definitions';
 import {getVendorProductId} from './hid-keyboards';
+import {createGoldConnectionProfiles} from './device-transport';
+import {migrateSettings} from './settings-migration';
 let deviceStore: Store;
 const defaultStoreData = {
   definitionIndex: {
@@ -36,7 +43,8 @@ const defaultStoreData = {
     themeMode: 'dark' as const,
     designDefinitionVersion: 'v3' as const,
     themeName: 'OLIVIA_DARK',
-    hostKeyboardLayout: 'keymap_us',
+    hostKeyboardLayout: 'keymap_french',
+    connectionProfiles: createGoldConnectionProfiles(),
     macroEditor: {
       smartOptimizeEnabled: true,
       recordDelaysEnabled: false,
@@ -122,9 +130,25 @@ export const getMissingDefinition = async <
   version: K,
 ): Promise<[DefinitionVersionMap[K], K]> => {
   const vpid = getVendorProductId(device.vendorId, device.productId);
+  const officialIds =
+    deviceStore.get('definitionIndex')?.supportedVendorProductIdMap ?? {};
   const url = `/definitions/${version}/${vpid}.json`;
-  const response = await fetch(url);
-  const json: DefinitionVersionMap[K] = await response.json();
+  const {definition: json, source} = await resolveDefinitionWithBundledFallback(
+    vpid,
+    version,
+    officialIds,
+    async () => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Fetching ${url} failed with HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  );
+  if (source !== 'remote') {
+    return [json, version];
+  }
+
   let definitions = deviceStore.get('definitions');
   const newDefinitions = {
     ...definitions,
@@ -153,10 +177,15 @@ export const getMissingDefinition = async <
 };
 
 export const getSupportedIdsFromStore = (): VendorProductIdMap =>
-  deviceStore.get('definitionIndex')?.supportedVendorProductIdMap;
+  mergeBundledSupportedIds(
+    deviceStore.get('definitionIndex')?.supportedVendorProductIdMap ?? {},
+  );
 
 export const getDefinitionsFromStore = (): KeyboardDictionary =>
-  deviceStore.get('definitions');
+  mergeBundledDefinitions(
+    deviceStore.get('definitions'),
+    deviceStore.get('definitionIndex')?.supportedVendorProductIdMap ?? {},
+  );
 
 export const getThemeFromStore = (): ThemeDefinition =>
   THEMES[getThemeNameFromStore() as keyof typeof THEMES] ||
@@ -166,7 +195,10 @@ export const getThemeModeFromStore = (): 'dark' | 'light' => {
   return deviceStore.get('settings')?.themeMode;
 };
 
-export const getShowSliderValuesModeFromStore = (): 'Slider & Show Value' | 'Slider & Input Field' | 'Slider Only' => {
+export const getShowSliderValuesModeFromStore = ():
+  | 'Slider & Show Value'
+  | 'Slider & Input Field'
+  | 'Slider Only' => {
   return deviceStore.get('settings')?.ShowSliderValuesMode;
 };
 
@@ -178,7 +210,11 @@ export const getThemeNameFromStore = () => {
   return deviceStore.get('settings')?.themeName;
 };
 
-export const getSettings = (): Settings => deviceStore.get('settings');
+export const getSettings = (): Settings =>
+  migrateSettings(
+    deviceStore.get('settings'),
+    deviceStore.persistedStore?.settings,
+  );
 
 export const setSettings = (settings: Settings) => {
   deviceStore.set('settings', current(settings));

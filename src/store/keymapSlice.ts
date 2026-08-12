@@ -99,12 +99,13 @@ const keymapSlice = createSlice({
         devicePath: string;
         keymapIndex: number;
         value: number;
+        layerIndex?: number;
       }>,
     ) => {
-      const {keymapIndex, value, devicePath} = action.payload;
-      const {selectedLayerIndex} = state;
+      const {keymapIndex, value, devicePath, layerIndex} = action.payload;
+      const targetLayerIndex = layerIndex ?? state.selectedLayerIndex;
 
-      state.rawDeviceMap[devicePath][selectedLayerIndex].keymap[keymapIndex] =
+      state.rawDeviceMap[devicePath][targetLayerIndex].keymap[keymapIndex] =
         value;
     },
   },

@@ -3,12 +3,23 @@ import {TestKeyState} from 'src/types/types';
 import {getIndexByEvent} from './key-event';
 
 type TestKeys = {[code: number]: TestKeyState};
+
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  const element = target as HTMLElement | null;
+  return Boolean(
+    element?.closest?.('input, textarea, select, [contenteditable="true"]'),
+  );
+};
+
 export const useGlobalKeys = (enableGlobalKeys: boolean) => {
   const startMatrixTest = !enableGlobalKeys;
   const selectedKeysState = useState<TestKeys>({});
   const [selectedKeys, setSelectedKeys] = selectedKeysState;
   // If pressed key is our target key then set to true
   function downHandler(evt: KeyboardEvent) {
+    if (isEditableTarget(evt.target)) {
+      return;
+    }
     evt.preventDefault();
     if (
       !startMatrixTest &&
@@ -24,6 +35,9 @@ export const useGlobalKeys = (enableGlobalKeys: boolean) => {
 
   // If released key is our target key then set to false
   const upHandler = (evt: KeyboardEvent) => {
+    if (isEditableTarget(evt.target)) {
+      return;
+    }
     evt.preventDefault();
     if (
       !startMatrixTest &&

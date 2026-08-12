@@ -12,6 +12,7 @@ import {
   AdvancedLightingValues,
   AdvancedPane,
 } from './submenus/lighting/advanced';
+import {LightingLabPane} from './submenus/lighting/lighting-lab';
 import {getLightingDefinition, isVIADefinitionV2} from '@the-via/reader';
 import {useAppSelector} from 'src/store/hooks';
 import {getSelectedDefinition} from 'src/store/definitionsSlice';
@@ -22,6 +23,7 @@ export const Category = {
   General: {label: 'General', Menu: GeneralPane},
   Layout: {label: 'Layout', Menu: LayoutPane},
   Advanced: {label: 'Advanced', Menu: AdvancedPane},
+  Lab: {label: 'Lab', Menu: LightingLabPane},
 };
 
 const LightingPane = styled(CenterPane)`
@@ -48,38 +50,43 @@ export const Pane: FC = () => {
 
   const getMenus = () => {
     if (!isVIADefinitionV2(selectedDefinition)) {
-      throw new Error(
-        t('This lighting component is only compatible with v2 definitions'),
-      );
+      return [Category.Lab];
     }
 
+    const lightingDefinition = getLightingDefinition(
+      selectedDefinition.lighting,
+    );
+    const hasGeneral = lightingDefinition.supportedLightingValues.length !== 0;
     const hasLayouts = LayoutConfigValues.some(
       (value) =>
-        getLightingDefinition(
-          selectedDefinition.lighting,
-        ).supportedLightingValues.indexOf(value) !== -1,
+        lightingDefinition.supportedLightingValues.indexOf(value) !== -1,
     );
     const hasAdvanced = AdvancedLightingValues.some(
       (value) =>
-        getLightingDefinition(
-          selectedDefinition.lighting,
-        ).supportedLightingValues.indexOf(value) !== -1,
+        lightingDefinition.supportedLightingValues.indexOf(value) !== -1,
     );
 
     return [
-      Category.General,
+      ...(hasGeneral ? [Category.General] : []),
       ...(hasLayouts ? [Category.Layout] : []),
       ...(hasAdvanced ? [Category.Advanced] : []),
+      Category.Lab,
     ].filter(({Menu}) => !!Menu);
   };
+
+  const menus = getMenus();
+  const activeCategory = menus.includes(selectedCategory)
+    ? selectedCategory
+    : menus[0];
+  const ActiveMenu = activeCategory.Menu;
 
   return (
     <>
       <SubmenuCell>
         <MenuContainer>
-          {getMenus().map((menu) => (
+          {menus.map((menu) => (
             <SubmenuRow
-              $selected={selectedCategory === menu}
+              $selected={activeCategory === menu}
               onClick={() => setSelectedCategory(menu)}
               key={menu.label}
             >
@@ -91,7 +98,7 @@ export const Pane: FC = () => {
       <OverflowCell>
         <LightingPane>
           <Container>
-            <selectedCategory.Menu />
+            <ActiveMenu />
           </Container>
         </LightingPane>
       </OverflowCell>

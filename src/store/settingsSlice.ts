@@ -1,5 +1,7 @@
 import {createSelector, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import type {
+  ConnectionProfile,
+  KeyboardTransport,
   MacroEditorSettings,
   Settings,
   TestKeyboardSoundsSettings,
@@ -63,7 +65,10 @@ const settingsSlice = createSlice({
       state.showDesignTab = action.payload;
       setSettings(state);
     },
-    setShowDesignTabConfirmationNotice: (state, action: PayloadAction<boolean>) => {
+    setShowDesignTabConfirmationNotice: (
+      state,
+      action: PayloadAction<boolean>,
+    ) => {
       state.showDesignTabConfirmationNotice = action.payload;
     },
     toggleThemeMode: (state) => {
@@ -121,6 +126,38 @@ const settingsSlice = createSlice({
     },
     updateHostKeyboardLayout: (state, action: PayloadAction<string>) => {
       state.hostKeyboardLayout = action.payload;
+      state.connectionProfiles.profiles[
+        state.connectionProfiles.activeTransport
+      ].hostKeyboardLayout = action.payload;
+      setSettings(state);
+    },
+    setActiveKeyboardTransport: (
+      state,
+      action: PayloadAction<KeyboardTransport>,
+    ) => {
+      state.connectionProfiles.activeTransport = action.payload;
+      state.hostKeyboardLayout =
+        state.connectionProfiles.profiles[action.payload].hostKeyboardLayout;
+      setSettings(state);
+    },
+    updateConnectionProfile: (
+      state,
+      action: PayloadAction<{
+        transport: KeyboardTransport;
+        changes: Partial<ConnectionProfile>;
+      }>,
+    ) => {
+      const {transport, changes} = action.payload;
+      state.connectionProfiles.profiles[transport] = {
+        ...state.connectionProfiles.profiles[transport],
+        ...changes,
+      };
+      if (
+        transport === state.connectionProfiles.activeTransport &&
+        changes.hostKeyboardLayout
+      ) {
+        state.hostKeyboardLayout = changes.hostKeyboardLayout;
+      }
       setSettings(state);
     },
   },
@@ -143,6 +180,8 @@ export const {
   updateThemeName,
   updateDesignDefinitionVersion,
   updateHostKeyboardLayout,
+  setActiveKeyboardTransport,
+  updateConnectionProfile,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;
@@ -186,3 +225,11 @@ export const getSelectedSRGBTheme = createSelector(
 
 export const getHostKeyboardLayout = (state: RootState) =>
   state.settings.hostKeyboardLayout;
+export const getConnectionProfiles = (state: RootState) =>
+  state.settings.connectionProfiles;
+export const getActiveKeyboardTransport = (state: RootState) =>
+  state.settings.connectionProfiles.activeTransport;
+export const getActiveConnectionProfile = (state: RootState) => {
+  const {activeTransport, profiles} = state.settings.connectionProfiles;
+  return profiles[activeTransport];
+};

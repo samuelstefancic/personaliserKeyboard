@@ -3,9 +3,16 @@ import type {StoreData} from '../types/types';
 
 export class Store {
   store: StoreData;
+  readonly persistedStore: Partial<StoreData> | undefined;
   constructor(defaults: StoreData) {
     const store = localStorage.getItem('via-app-store');
-    this.store = store ? defaultsDeep(JSON.parse(store), defaults) : defaults;
+    const parsedStore = store ? JSON.parse(store) : undefined;
+    this.persistedStore = parsedStore
+      ? structuredClone(parsedStore)
+      : undefined;
+    this.store = this.persistedStore
+      ? defaultsDeep({}, parsedStore, defaults)
+      : defaults;
   }
   get<K extends keyof StoreData>(key: K): StoreData[K] {
     return this.store[key];

@@ -2,7 +2,7 @@ import React, {FC, useContext} from 'react';
 import fullKeyboardDefinition from '../../utils/test-keyboard-definition.json';
 import {Pane} from './pane';
 import styled from 'styled-components';
-import {PROTOCOL_GAMMA} from '../../utils/keyboard-api';
+import {PROTOCOL_GAMMA} from '../../utils/via-protocol';
 import {
   ControlRow,
   Label,
@@ -37,6 +37,7 @@ import {AccentSelect} from '../inputs/accent-select';
 import {AccentRange} from '../inputs/accent-range';
 import {TestKeyboardSoundsMode} from '../void/test-keyboard-sounds';
 import {useTranslation} from 'react-i18next';
+import {ModifierDoctor} from './modifier-doctor';
 
 const Container = styled.div`
   display: flex;
@@ -246,6 +247,7 @@ export const Test: FC = () => {
                 />
               </Detail>
             </ControlRow>
+            <ModifierDoctor />
           </Container>
         </SpanOverflowCell>
       </Grid>

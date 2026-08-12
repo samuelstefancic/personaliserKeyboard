@@ -18,7 +18,7 @@ import {
   getCustomDefinitions,
   getSelectedDefinition,
 } from 'src/store/definitionsSlice';
-import {reloadConnectedDevices} from 'src/store/devicesThunks';
+import {authorizeAndReloadConnectedDevices} from 'src/store/devicesThunks';
 import {useAppDispatch, useAppSelector} from 'src/store/hooks';
 import {
   getConfigureKeyboardIsSelectable,
@@ -131,8 +131,8 @@ export const NonSuspenseCanvasRouter = () => {
             ? !hideTerrainBG
               ? 'translateY(-500px)'
               : !dimensions
-              ? ''
-              : `translateY(${-300 + dimensions!.height / 2}px)`
+                ? ''
+                : `translateY(${-300 + dimensions!.height / 2}px)`
             : '',
           position: hideCanvasScene && !hideTerrainBG ? 'absolute' : 'relative',
           overflow: 'visible',
@@ -166,7 +166,7 @@ export const NonSuspenseCanvasRouter = () => {
             {showAuthorizeButton ? (
               !selectedDefinition ? (
                 <AccentButtonLarge
-                  onClick={() => dispatch(reloadConnectedDevices())}
+                  onClick={() => dispatch(authorizeAndReloadConnectedDevices())}
                   style={{width: 'max-content'}}
                 >
                   Authorize device

@@ -5,6 +5,7 @@
     "build": "bun run build:kbs && tsc && vite build",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+    "test": "bun test tests",
     "refresh-kbs": "bun update --force via-keyboards",
     "build:azure": "bun run refresh-kbs && bun run build",
     "preview": "vite preview",

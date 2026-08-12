@@ -31,6 +31,9 @@ import {
   getRenderMode,
   updateRenderMode,
   setShowDesignTabConfirmationNotice,
+  getConnectionProfiles,
+  setActiveKeyboardTransport,
+  updateConnectionProfile,
 } from 'src/store/settingsSlice';
 import {AccentSelect} from '../inputs/accent-select';
 import {THEMES} from 'src/utils/themes';
@@ -43,6 +46,13 @@ import {ErrorMessage} from '../styled';
 import {webGLIsAvailable} from 'src/utils/test-webgl';
 import {useTranslation} from 'react-i18next';
 import {MessageDialog} from '../inputs/message-dialog';
+import {
+  HOST_PLATFORMS,
+  PLATFORM_LABELS,
+  TRANSPORT_LABELS,
+} from 'src/utils/device-transport';
+import type {HostPlatform, KeyboardTransport} from 'src/types/types';
+import {EVO75_VENDOR_PRODUCT_ID} from 'src/utils/bundled-definitions';
 
 const Container = styled.div`
   display: flex;
@@ -61,6 +71,15 @@ const SettingsErrorMessage = styled(ErrorMessage)`
   font-style: italic;
 `;
 
+const ExplanatoryText = styled.p`
+  color: var(--color_label);
+  font-size: 15px;
+  line-height: 1.45;
+  margin: 12px 5px 18px;
+  max-width: 950px;
+  width: 100%;
+`;
+
 export const Settings = () => {
   const {t} = useTranslation();
   const dispatch = useDispatch();
@@ -75,6 +94,7 @@ export const Settings = () => {
   const themeName = useAppSelector(getThemeName);
   const renderMode = useAppSelector(getRenderMode);
   const selectedDevice = useAppSelector(getSelectedConnectedDevice);
+  const connectionProfiles = useAppSelector(getConnectionProfiles);
 
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showDesignTabNotice, setShowDesignTabNotice] = useState(false);
@@ -129,6 +149,23 @@ export const Settings = () => {
   const renderModeDefaultValue = renderModeOptions.find(
     (opt) => opt.value === renderMode,
   );
+  const transportOptions = Object.entries(TRANSPORT_LABELS).map(
+    ([value, label]) => ({value, label: t(label)}),
+  );
+  const platformOptions = HOST_PLATFORMS.map((value) => ({
+    value,
+    label: t(PLATFORM_LABELS[value]),
+  }));
+  const activeTransport = connectionProfiles.activeTransport;
+  const activeProfile = connectionProfiles.profiles[activeTransport];
+  const activeTransportOption = transportOptions.find(
+    ({value}) => value === activeTransport,
+  );
+  const activePlatformOption = platformOptions.find(
+    ({value}) => value === activeProfile.platform,
+  );
+  const selectedInterfaceIsEvo75 =
+    selectedDevice?.vendorProductId === EVO75_VENDOR_PRODUCT_ID;
   return (
     <Pane>
       <Grid style={{overflow: 'hidden'}}>
@@ -154,6 +191,58 @@ export const Settings = () => {
               </Detail>
             </ControlRow>
             <ControlRow>
+              <Label>{t('Contexte de connexion EVO75')}</Label>
+              <Detail>
+                <AccentSelect
+                  isSearchable={false}
+                  value={activeTransportOption}
+                  options={transportOptions}
+                  onChange={(option: any) => {
+                    option &&
+                      dispatch(
+                        setActiveKeyboardTransport(
+                          option.value as KeyboardTransport,
+                        ),
+                      );
+                  }}
+                />
+              </Detail>
+            </ControlRow>
+            <ControlRow>
+              <Label>{t('Machine cible pour ce contexte')}</Label>
+              <Detail>
+                <AccentSelect
+                  isSearchable={false}
+                  value={activePlatformOption}
+                  options={platformOptions}
+                  onChange={(option: any) => {
+                    option &&
+                      dispatch(
+                        updateConnectionProfile({
+                          transport: activeTransport,
+                          changes: {
+                            platform: option.value as HostPlatform,
+                          },
+                        }),
+                      );
+                  }}
+                />
+              </Detail>
+            </ControlRow>
+            <ControlRow>
+              <Label>{t('Interface VIA actuellement sélectionnée')}</Label>
+              <Detail>
+                {selectedInterfaceIsEvo75
+                  ? t('EVO75 visible · transport non vérifiable')
+                  : t('Aucun EVO75 sélectionné via VIA Raw HID')}
+              </Detail>
+            </ControlRow>
+            <ExplanatoryText>
+              {t(
+                "Ce contexte est déclaré localement : WebHID ne révèle pas si le clavier passe par le câble, le récepteur 2,4 GHz ou Bluetooth. USB cible Windows ; les deux modes sans fil ciblent macOS. Après l'autorisation initiale imposée par le navigateur, l'application réutilise automatiquement le périphérique autorisé lorsqu'il expose l'interface VIA Raw HID.",
+              )}
+            </ExplanatoryText>
+            <ControlRow>
               <Label>{t('Show HID Console tab')}</Label>
               <Detail>
                 <AccentSlider
@@ -178,7 +267,8 @@ export const Settings = () => {
                   defaultValue={showSliderModeDefaultValue}
                   options={ShowSliderModeOptions}
                   onChange={(option: any) => {
-                    option && dispatch(updateShowSliderValuesMode(option.value));
+                    option &&
+                      dispatch(updateShowSliderValuesMode(option.value));
                   }}
                 />
               </Detail>
@@ -239,7 +329,7 @@ export const Settings = () => {
             confirmLabel="OK"
           >
             {t(
-              "You didn't click \"Confirm\". To enable the Design tab, you must confirm first.",
+              'You didn\'t click "Confirm". To enable the Design tab, you must confirm first.',
             )}
           </MessageDialog>
           {showDiagnostics && selectedDevice ? (

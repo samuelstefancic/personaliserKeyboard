@@ -12,6 +12,7 @@ import {
 } from 'src/store/errorsSlice';
 import {KeyboardValue} from './keyboard-values';
 export {KeyboardValue} from './keyboard-values';
+export {PROTOCOL_GAMMA} from './via-protocol';
 
 // VIA Command IDs
 
@@ -144,7 +145,6 @@ const BACKLIGHT_CUSTOM_COLOR = 0x17;
 
 export const PROTOCOL_ALPHA = 7;
 export const PROTOCOL_BETA = 8;
-export const PROTOCOL_GAMMA = 9;
 
 const cache: {[addr: string]: {hid: any}} = {};
 
