@@ -17,6 +17,13 @@ timeline so later presses never restart earlier waves. See
 [`docs/lighting-lab.md`](docs/lighting-lab.md) for architecture, safety limits,
 and the EVO75 test checklist.
 
+The fork also bundles a validated local EVO75 V3 fallback for
+`VID:PID 36B0:311E`, adds explicit USB/2,4 GHz/Bluetooth host profiles, and
+provides a guarded Windows AltGr diagnostic in Key Tester. USB is specified for
+the Windows PC; the receiver and Bluetooth profiles target macOS. Wireless
+configuration is offered only when that mode actually exposes VIA Raw HID—no
+transport or firmware capability is guessed.
+
 ## Getting VIA to support your keyboard
 
 Are you a keyboard maker or a developer interested in adding support for your keyboard? We welcome contributions to the VIA project!

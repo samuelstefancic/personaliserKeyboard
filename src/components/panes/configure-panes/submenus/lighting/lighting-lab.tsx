@@ -20,7 +20,12 @@ import {
 } from 'src/store/devicesSlice';
 import {useAppSelector} from 'src/store/hooks';
 import {getSelectedKeymap} from 'src/store/keymapSlice';
+import {
+  getActiveConnectionProfile,
+  getActiveKeyboardTransport,
+} from 'src/store/settingsSlice';
 import {DisplayMode, KeyColorPair} from 'src/types/keyboard-rendering';
+import {PLATFORM_LABELS, TRANSPORT_LABELS} from 'src/utils/device-transport';
 import {
   getStaticLightingLabCapabilities,
   LightingLabCapabilities,
@@ -219,8 +224,8 @@ const CapabilityValue = styled.span<{$status: string}>`
     props.$status === 'supported'
       ? '#69d391'
       : props.$status === 'unsupported'
-      ? '#ff7b7b'
-      : 'var(--color_label)'};
+        ? '#ff7b7b'
+        : 'var(--color_label)'};
 `;
 
 const Advanced = styled.details`
@@ -255,14 +260,14 @@ const hueSaturationToRGB = ([
     h < 60
       ? [chroma, x, 0]
       : h < 120
-      ? [x, chroma, 0]
-      : h < 180
-      ? [0, chroma, x]
-      : h < 240
-      ? [0, x, chroma]
-      : h < 300
-      ? [x, 0, chroma]
-      : [chroma, 0, x];
+        ? [x, chroma, 0]
+        : h < 180
+          ? [0, chroma, x]
+          : h < 240
+            ? [0, x, chroma]
+            : h < 300
+              ? [x, 0, chroma]
+              : [chroma, 0, x];
   return {
     r: clampByte(r + match),
     g: clampByte(g + match),
@@ -375,6 +380,8 @@ export const LightingLabPane = () => {
   const device = useAppSelector(getSelectedConnectedDevice);
   const api = useAppSelector(getSelectedKeyboardAPI);
   const isDeviceReady = useAppSelector(getIsSelectedDeviceReady);
+  const activeTransport = useAppSelector(getActiveKeyboardTransport);
+  const activeConnectionProfile = useAppSelector(getActiveConnectionProfile);
   const apiAddress = typeof api === 'string' ? undefined : api?.kbAddr;
 
   const [settings, setSettings] = useState<LabSettings>(DEFAULT_SETTINGS);
@@ -512,14 +519,14 @@ export const LightingLabPane = () => {
   const liveUnavailableReason = !isDeviceReady
     ? 'The selected device is not ready.'
     : staticCapabilities?.matrixInput.status === 'unsupported'
-    ? staticCapabilities.matrixInput.reason
-    : staticCapabilities?.activeKeyMapping.status === 'unsupported'
-    ? staticCapabilities.activeKeyMapping.reason
-    : staticCapabilities?.perKeyRead.status === 'unsupported'
-    ? staticCapabilities.perKeyRead.reason
-    : staticCapabilities?.perKeyWrite.status === 'unsupported'
-    ? staticCapabilities.perKeyWrite.reason
-    : 'The required temporary per-key capabilities are not available.';
+      ? staticCapabilities.matrixInput.reason
+      : staticCapabilities?.activeKeyMapping.status === 'unsupported'
+        ? staticCapabilities.activeKeyMapping.reason
+        : staticCapabilities?.perKeyRead.status === 'unsupported'
+          ? staticCapabilities.perKeyRead.reason
+          : staticCapabilities?.perKeyWrite.status === 'unsupported'
+            ? staticCapabilities.perKeyWrite.reason
+            : 'The required temporary per-key capabilities are not available.';
 
   const safelySetRunState = useCallback((nextState: LabRunState) => {
     if (mountedRef.current) {
@@ -1203,7 +1210,9 @@ export const LightingLabPane = () => {
     device.vendorId,
   )}:${formatHexId(device.productId)} · VIA ${device.protocol} · ${
     definition.matrix.rows
-  }×${definition.matrix.cols}`;
+  }×${definition.matrix.cols} · contexte déclaré ${
+    TRANSPORT_LABELS[activeTransport]
+  } → ${PLATFORM_LABELS[activeConnectionProfile.platform]}`;
   const matrixCapability = describeCapability(capabilities!.matrixInput);
   const ledMappingCapability = describeCapability(
     capabilities!.activeKeyMapping,
@@ -1325,7 +1334,7 @@ export const LightingLabPane = () => {
       <HelpText>
         {canRequestLive
           ? t(
-              'Live output requires USB, an open page, a reversible probe, and visual confirmation. It does not install a firmware effect.',
+              'Live output requires a visible VIA Raw HID interface, an open page, a reversible probe, and visual confirmation. The declared transport is not auto-detected and no firmware effect is installed.',
             )
           : t(`Live output is unavailable: ${liveUnavailableReason}`)}
       </HelpText>

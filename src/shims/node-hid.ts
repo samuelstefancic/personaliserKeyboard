@@ -93,8 +93,8 @@ const ExtendedHID = {
   },
   devices: async (requestAuthorize = false) => {
     let devices = await ExtendedHID.getFilteredDevices();
-    // TODO: This is a hack to avoid spamming the requestDevices popup
-    if (devices.length === 0 || requestAuthorize) {
+    // The native chooser must only follow an explicit user authorization action.
+    if (requestAuthorize) {
       try {
         await ExtendedHID.requestDevice();
       } catch (e) {
@@ -157,9 +157,7 @@ const ExtendedHID = {
             // It should be impossible to have a handler in the buffer
             // that has a ts that happened after the current message
             // came in
-            (eventWaitBuffer[this.path].shift() as any)(
-              message,
-            );
+            (eventWaitBuffer[this.path].shift() as any)(message);
           } else {
             globalBuffer[this.path].push({
               currTime: Date.now(),

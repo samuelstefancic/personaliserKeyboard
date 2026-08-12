@@ -37,6 +37,7 @@ import {AccentSelect} from '../inputs/accent-select';
 import {AccentRange} from '../inputs/accent-range';
 import {TestKeyboardSoundsMode} from '../void/test-keyboard-sounds';
 import {useTranslation} from 'react-i18next';
+import {ModifierDoctor} from './modifier-doctor';
 
 const Container = styled.div`
   display: flex;
@@ -246,6 +247,7 @@ export const Test: FC = () => {
                 />
               </Detail>
             </ControlRow>
+            <ModifierDoctor />
           </Container>
         </SpanOverflowCell>
       </Grid>

@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'bun:test';
 import type {VIAKey} from '@the-via/reader';
+import {EVO75_DEFINITION} from '../../src/utils/bundled-definitions';
 import {
   buildReactiveLedMapping,
   buildReactivePreviewLedMapping,
@@ -115,6 +116,38 @@ describe('reactive LED mapping', () => {
       ledIndex: 1,
       addressSpace: 'virtual-key-index',
     });
+  });
+
+  test('keeps the EVO75 preview-only until a physical LED mapping is verified', () => {
+    const strictMapping = buildReactiveLedMapping(
+      EVO75_DEFINITION.layouts.keys,
+      EVO75_DEFINITION.matrix,
+    );
+    const previewMapping = buildReactivePreviewLedMapping(
+      EVO75_DEFINITION.layouts.keys,
+      EVO75_DEFINITION.matrix,
+    );
+
+    expect(strictMapping).toMatchObject({
+      eligibleKeyCount: 82,
+      isComplete: false,
+    });
+    expect(strictMapping.leds).toHaveLength(0);
+    expect(strictMapping.diagnostics).toHaveLength(82);
+    expect(
+      strictMapping.diagnostics.every(({code}) => code === 'missing-led-index'),
+    ).toBe(true);
+
+    expect(previewMapping).toMatchObject({
+      eligibleKeyCount: 82,
+      isComplete: true,
+    });
+    expect(previewMapping.leds).toHaveLength(82);
+    expect(
+      previewMapping.leds.every(
+        ({addressSpace}) => addressSpace === 'virtual-key-index',
+      ),
+    ).toBe(true);
   });
 
   test('skips decals and encoders without compressing renderer key indexes', () => {

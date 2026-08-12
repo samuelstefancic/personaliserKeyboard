@@ -20,6 +20,7 @@ type DevicesState = {
   invalidProtocolDevicePaths: Record<string, Device>;
   supportedIds: VendorProductIdMap;
   forceAuthorize: boolean;
+  definitionsReady: boolean;
 };
 
 const initialState: DevicesState = {
@@ -30,6 +31,7 @@ const initialState: DevicesState = {
   invalidProtocolDevicePaths: {},
   supportedIds: {},
   forceAuthorize: false,
+  definitionsReady: false,
 };
 
 const deviceSlice = createSlice({
@@ -52,6 +54,9 @@ const deviceSlice = createSlice({
     },
     setForceAuthorize: (state, action: PayloadAction<boolean>) => {
       state.forceAuthorize = action.payload;
+    },
+    setDefinitionsReady: (state, action: PayloadAction<boolean>) => {
+      state.definitionsReady = action.payload;
     },
     updateConnectedDevices: (
       state,
@@ -116,12 +121,15 @@ export const {
   updateSupportedIds,
   ensureSupportedIds,
   setForceAuthorize,
+  setDefinitionsReady,
 } = deviceSlice.actions;
 
 export default deviceSlice.reducer;
 
 export const getForceAuthorize = (state: RootState) =>
   state.devices.forceAuthorize;
+export const getDefinitionsReady = (state: RootState) =>
+  state.devices.definitionsReady;
 export const getConnectedDevices = (state: RootState) =>
   state.devices.connectedDevicePaths;
 export const getUnresolvedDefinitionDevices = (state: RootState) =>

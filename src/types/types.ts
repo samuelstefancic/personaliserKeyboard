@@ -81,11 +81,28 @@ export type TestKeyboardSoundsSettings = {
   transpose: number;
 };
 
+export type KeyboardTransport = 'usb' | 'receiver-2.4g' | 'bluetooth';
+
+export type HostPlatform = 'windows' | 'macos' | 'other';
+
+export type ConnectionProfile = {
+  platform: HostPlatform;
+  hostKeyboardLayout: string;
+};
+
+export type ConnectionProfilesSettings = {
+  activeTransport: KeyboardTransport;
+  profiles: Record<KeyboardTransport, ConnectionProfile>;
+};
+
 export type Settings = {
   showDesignTab: boolean;
   showConsoleTab: boolean;
   disableFastRemap: boolean;
-  ShowSliderValuesMode: 'Slider Only' | 'Slider & Show Value' | 'Slider & Input Field';
+  ShowSliderValuesMode:
+    | 'Slider Only'
+    | 'Slider & Show Value'
+    | 'Slider & Input Field';
   renderMode: '3D' | '2D';
   themeMode: 'light' | 'dark';
   themeName: string;
@@ -93,6 +110,7 @@ export type Settings = {
   testKeyboardSoundsSettings: TestKeyboardSoundsSettings;
   designDefinitionVersion: DefinitionVersion;
   hostKeyboardLayout: string;
+  connectionProfiles: ConnectionProfilesSettings;
 };
 
 export type CommonMenusMap = {

@@ -33,7 +33,7 @@ import {
   setConfigureKeyboardIsSelectable,
 } from 'src/store/keymapSlice';
 import {useDispatch} from 'react-redux';
-import {reloadConnectedDevices} from 'src/store/devicesThunks';
+import {authorizeAndReloadConnectedDevices} from 'src/store/devicesThunks';
 import {getV3MenuComponents} from 'src/store/menusSlice';
 import {getIsMacroFeatureSupported} from 'src/store/macrosSlice';
 import {getConnectedDevices, getSupportedIds} from 'src/store/devicesSlice';
@@ -168,7 +168,9 @@ const Loader: React.FC<{
     <LoaderPane>
       {<ChippyLoader theme={theme} progress={loadProgress || null} />}
       {(showButton || noConnectedDevices) && !noSupportedIds && !isElectron ? (
-        <AccentButtonLarge onClick={() => dispatch(reloadConnectedDevices())}>
+        <AccentButtonLarge
+          onClick={() => dispatch(authorizeAndReloadConnectedDevices())}
+        >
           {t('Authorize device')}
           <FontAwesomeIcon style={{marginLeft: '10px'}} icon={faPlus} />
         </AccentButtonLarge>

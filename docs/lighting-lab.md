@@ -106,13 +106,18 @@ for a false live result.
 
 ## EVO75 status
 
-The current generated VIA definition set does not contain EVO75, Evoworks, or
-Ticktype entries. Public [ANSI](https://github.com/swagkey/swagkey.github.io/blob/142fa09fbcd3b81bc05ed8ec74392c12d9e764f4/definitions/v3/917516457.json)
-and [ISO](https://github.com/swagkey/swagkey.github.io/blob/142fa09fbcd3b81bc05ed8ec74392c12d9e764f4/definitions/v3/917516574.json)
-EVO75 definitions are vendor-hosted rather than part of the official VIA
-keyboard database. The published ISO candidate is VID:PID `36B0:311E`, with a
-`6 × 16` matrix and 82 keys; this is definition metadata, not an observation of
-the user's physical device.
+The official VIA definition set still does not advertise the EVO75 at
+VID:PID `36B0:311E`. `personaliserKeyboard` now carries the exact vendor V3
+definition as a validated local fallback. Its provenance, immutable matching
+source and SHA-256 are recorded in `src/definitions/README.md`. A sideloaded
+user definition remains higher priority, and a future valid official definition
+supersedes the fallback.
+
+The local definition resolves the keyboard name, its `6 × 16` matrix, 82 keys,
+custom transport keycodes and RGB menu controls. Loading it adds no HID command
+and does not alter firmware. Once a board is connected, the existing VIA
+initialization still performs documented reads; changing a menu or key remains
+an immediate device write.
 
 The inspected ISO definition describes physical/matrix coordinates and global
 RGB Matrix menu controls, but provides no `li` per-key LED indices. Its menu
@@ -122,7 +127,7 @@ protocol. The vendor configurator also contains
 but its current configuration has no EVO75 entry; Lighting Lab therefore does
 not import or send them.
 
-Consequently, safe device streaming on the EVO75 remains blocked until a
+Consequently, safe live device streaming on the EVO75 remains blocked until a
 connected, WebHID-authorized board provides all of the following evidence:
 
 - resolved active definition and protocol version;
@@ -132,33 +137,96 @@ connected, WebHID-authorized board provides all of the following evidence:
 - measured command latency that supports a bounded update rate;
 - successful best-effort restoration.
 
-No EVO75 was visible to the local operating-system HID inventory during the
-implementation session, so no hardware result or performance number is claimed.
-The vendor ISO JSON can be sideloaded through VIA's existing Design tab for a
-controlled test; inventing the missing LED order in that JSON would not be safe.
+The EVO75 definition has no `li` values, so the strict live mapping deliberately
+contains zero writable LEDs while the virtual 82-key preview remains available.
+Inventing LED order from matrix order would be unsafe. During the integrated
+browser check, the app showed no already-authorized keyboard, so no hardware
+result or performance number is claimed.
+
+## Transport and host profiles
+
+The Gold topology is explicit:
+
+- **USB → Windows PC**, with a French host-layout expectation;
+- **2,4 GHz receiver → Mac**;
+- **Bluetooth → Mac**.
+
+Settings exposes these three contexts and stores the active choice locally in
+the browser. Switching context also restores that context's saved host-layout
+label. The choice is an intent supplied by the user, not a detected firmware
+state: standard WebHID exposes VID, PID, product name and HID collections but no
+reliable `USB / 2,4 GHz / Bluetooth` transport field. A 2,4 GHz receiver is a
+USB HID device from the host's point of view.
+
+Configuration in a wireless context is therefore enabled by capability, not by
+an optimistic transport guess. It works only if that mode exposes the same VIA
+Raw HID collection (`usagePage 0xFF60`, `usage 0x61`) and responds to the VIA
+protocol. This project contains no WebBluetooth or undocumented wireless
+command adapter. The browser's first device grant always requires its native
+chooser; later reconnects reuse an already granted device automatically and do
+not add an application confirmation dialog.
+
+Profiles never auto-write or swap a full keymap when the hardware selector is
+changed. The EVO75 definition describes transport-switch keycodes, but does not
+expose a query for the current transport or prove separate onboard keymaps per
+transport.
+
+## Windows AltGr diagnostic
+
+**Key Tester → Diagnostic AltGr Windows** adds a guarded workflow:
+
+1. a focused input captures the host's `AltRight` versus `MetaRight` signal and
+   the text actually inserted, without treating the app's language badge as an
+   operating-system setting;
+2. a one-shot matrix probe captures the physical row/column instead of assuming
+   a hard-coded EVO75 position;
+3. a read of layer 0 records the exact current keycode;
+4. correction is offered only when the Windows profile, host `Right GUI` signal
+   and stored GUI keycode agree;
+5. the transaction performs `GET → one SET_KEYCODE → GET`. If the SET may have
+   applied but reports an error, it reconciles and restores the original value;
+6. a verified manual rollback remains available for the current session.
+
+If the stored code is already `KC_RALT`, the doctor performs no write and points
+to a possible Win/Mac mode or global Alt/GUI swap. It never imports a full
+keymap, assigns a QMK Magic swap, saves a custom menu, resets EEPROM, enters the
+bootloader or flashes firmware.
 
 ## Manual EVO75 checklist
 
-1. Connect the EVO75 by USB and put its hardware selector in USB mode.
-2. Open the local app in Chrome and authorize the device through WebHID.
-3. Confirm the detected product, VID/PID, protocol, matrix dimensions, and
+1. On Windows, connect the EVO75 by USB and select **USB → Windows** in Settings.
+2. Open the local app in Chrome and grant the native WebHID chooser once.
+3. Confirm the detected product, VID/PID `36B0:311E`, protocol, matrix, and
    selected definition in the capability panel.
-4. Open **Configure → Lighting → Lab** and keep
+4. In **Key Tester → Diagnostic AltGr Windows**, capture AltGr alone and verify
+   whether the host reports `AltRight` or `MetaRight`.
+5. Arm the matrix probe, press only the physical AltGr key, read its layer-0
+   keycode, and apply the unit correction only if all three proofs agree.
+6. Validate `AltGr + 0 → @` with the Windows French historical layout, verify
+   that `Win + chiffre` still works only from the real Win key, then power-cycle
+   and read the same coordinate again.
+7. Open **Configure → Lighting → Lab** and keep
    **Live output on next Start** off.
-5. Start preview, press keys slowly, then use **Trigger test ripple**.
-6. Press A, Z, E, R, T quickly. Confirm five independent waves and that earlier
+8. Start preview, press keys slowly, then use **Trigger test ripple**.
+9. Press A, Z, E, R, T quickly. Confirm five independent waves and that earlier
    waves continue after T starts.
-7. Hold one key. Confirm it creates only one ripple until an `up` followed by a
-   new `down`.
-8. Test rapid and simultaneous presses, then the same key repeatedly.
-9. Stop preview, enable **Live output on next Start**, then select **Start**.
-   Wait while the Lab captures the existing per-key colors and performs its
-   reversible probe.
-10. Confirm the probe only if the indicated LED visibly changed. Once the UI
+10. Hold one key. Confirm it creates only one ripple until an `up` followed by a
+    new `down`.
+11. Test rapid and simultaneous presses, then the same key repeatedly.
+12. Do not enable live output on EVO75 until a verified `row/col → li` mapping
+    exists. Preview-only is the expected safe state for the bundled definition.
+13. On the Mac, repeat authorization and read-only configuration checks first
+    with **Récepteur 2,4 GHz → macOS**, then **Bluetooth → macOS**. For each mode,
+    record whether the browser sees the VIA Raw HID collection and protocol.
+14. If a future verified definition enables live output, stop preview, enable
+    **Live output on next Start**, then select **Start**.
+    Wait while the Lab captures the existing per-key colors and performs its
+    reversible probe.
+15. Confirm the probe only if the indicated LED visibly changed. Once the UI
     enters live mode, record measured latency, effective update rate, average
     changed LEDs, and dropped frames.
-11. Stop and verify the UI reports restoration success or an explicit failure.
-12. Disconnect/reconnect, then close/reopen the page. Confirm no old stream
+16. Stop and verify the UI reports restoration success or an explicit failure.
+17. Disconnect/reconnect, then close/reopen the page. Confirm no old stream
     resumes automatically.
 
 ## Performance results

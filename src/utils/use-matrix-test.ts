@@ -69,10 +69,22 @@ export const useMatrixTest = (
     return undefined;
   }, [startTest, selectedDefinition, api, device, dispatch, setSelectedKeys]);
 
+  const isEditableTarget = (target: EventTarget | null): boolean => {
+    const element = target as HTMLElement | null;
+    return Boolean(
+      element?.closest?.('input, textarea, select, [contenteditable="true"]'),
+    );
+  };
   const downHandler = (evt: KeyboardEvent) => {
+    if (isEditableTarget(evt.target)) {
+      return;
+    }
     evt.preventDefault();
   };
   const upHandler = (evt: KeyboardEvent) => {
+    if (isEditableTarget(evt.target)) {
+      return;
+    }
     evt.preventDefault();
   };
 
